@@ -1,0 +1,21 @@
+// protoc --go_out=. --go-grpc_out=. encrypt.proto
+
+syntax = "proto3";
+
+package encrypt;
+
+import "google/protobuf/struct.proto";
+
+option go_package = "./encrypt";
+
+service Encrypt {
+    rpc Encrypt(EncryptRequest) returns (EncryptResponse) {}
+}
+
+message EncryptRequest {
+    google.protobuf.Struct request = 1;
+}
+
+message EncryptResponse {
+    google.protobuf.Struct response = 2;
+}

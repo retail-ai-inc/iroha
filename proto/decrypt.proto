@@ -1,0 +1,21 @@
+// protoc --go_out=. --go-grpc_out=. decrypt.proto
+
+syntax = "proto3";
+
+package decrypt;
+
+import "google/protobuf/struct.proto";
+
+option go_package = "./decrypt";
+
+service Decrypt {
+    rpc Decrypt(DecryptRequest) returns (DecryptResponse) {}
+}
+
+message DecryptRequest {
+    google.protobuf.Struct request = 1;
+}
+
+message DecryptResponse {
+    google.protobuf.Struct response = 2;
+}
