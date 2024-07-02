@@ -13,45 +13,50 @@ const (
 )
 
 // Encrypt encrypts plainText using XChaCha20-Poly1305.
-func Encrypt(plainText string, key []byte) ([]byte, error) {
+func Encrypt(plainText, key string) (string, error) {
+	k := []byte(key)
+
 	// use first 32byte if the key length is longer than 32byte.
-	if len(key) > KeySize {
-		key = key[0:KeySize]
+	if len(k) > KeySize {
+		k = k[0:KeySize]
 	}
 
-	aead, err := chacha20poly1305.NewX(key)
-	if err != nil {
-		return nil, err
-	}
-
-	nonce := make([]byte, nonceSizeX)
-	if _, err := rand.Read(nonce); err != nil {
-		return nil, err
-	}
-
-	cipherText := aead.Seal(nil, nonce, []byte(plainText), nil)
-	cipherText = append(nonce, cipherText...)
-	return cipherText, nil
-}
-
-// Decrypt decrypts cipherText using XChaCha20-Poly1305.
-func Decrypt(cipherText, key []byte) (string, error) {
-	// use first 32byte if the key length is longer than 32byte.
-	if len(key) > KeySize {
-		key = key[0:KeySize]
-	}
-
-	aead, err := chacha20poly1305.NewX(key)
+	aead, err := chacha20poly1305.NewX(k)
 	if err != nil {
 		return "", err
 	}
 
-	if len(cipherText) < nonceSizeX {
-		return "", fmt.Errorf("cipherText is too short: textsize=[%d], noncesize=[%d]", len(cipherText), nonceSizeX)
+	nonce := make([]byte, nonceSizeX)
+	if _, err := rand.Read(nonce); err != nil {
+		return "", err
 	}
 
-	nonce := cipherText[:nonceSizeX]
-	plainByte, err := aead.Open(nil, nonce, cipherText[nonceSizeX:], nil)
+	cipherText := aead.Seal(nil, nonce, []byte(plainText), nil)
+	cipherText = append(nonce, cipherText...)
+	return string(cipherText), nil
+}
+
+// Decrypt decrypts cipherText using XChaCha20-Poly1305.
+func Decrypt(cipherText, key string) (string, error) {
+	k := []byte(key)
+	ct := []byte(cipherText)
+
+	// use first 32byte if the key length is longer than 32byte.
+	if len(k) > KeySize {
+		k = k[0:KeySize]
+	}
+
+	aead, err := chacha20poly1305.NewX(k)
+	if err != nil {
+		return "", err
+	}
+
+	if len(ct) < nonceSizeX {
+		return "", fmt.Errorf("cipherText is too short: textsize=[%d], noncesize=[%d]", len(ct), nonceSizeX)
+	}
+
+	nonce := ct[:nonceSizeX]
+	plainByte, err := aead.Open(nil, nonce, ct[nonceSizeX:], nil)
 	if err != nil {
 		return "", err
 	}

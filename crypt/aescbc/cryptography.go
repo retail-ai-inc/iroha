@@ -1,44 +1,35 @@
-package aesgcm
+package aescbc
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"fmt"
 )
 
-// Encrypt encrypts plainText using AES GCM mode.
-func Encrypt(plainText, key string) (string, error) {
+func Encrypt(plaintext, key, initialvector string) (string, error) {
 	k := []byte(key)
+	iv := []byte(initialvector)
 
-	// use first 32byte if the key length is longer than 32byte.
-	if len(k) > 32 {
-		k = k[0:32]
-	}
-
+	bPlaintext := PKCS5Padding([]byte(plaintext), aes.BlockSize)
 	block, err := aes.NewCipher(k)
 	if err != nil {
 		return "", err
 	}
 
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", err
+	// use first `aes.BlockSize`` byte if the key length is longer than `aes.BlockSize`.
+	if len(iv) > aes.BlockSize {
+		iv = iv[0:aes.BlockSize]
 	}
 
-	nonce := make([]byte, gcm.NonceSize())
-	_, err = rand.Read(nonce)
-	if err != nil {
-		return "", err
-	}
+	ciphertext := make([]byte, len(bPlaintext))
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(ciphertext, bPlaintext)
 
-	cipherText := gcm.Seal(nil, nonce, []byte(plainText), nil)
-	cipherText = append(nonce, cipherText...)
-
-	return string(cipherText), nil
+	return string(ciphertext), nil
 }
 
-// Decrypt decrypts cipherText using AES GCM mode.
+// Decrypt decrypts cipherText using AES 256 CBC mode.
 func Decrypt(cipherText, key string) (string, error) {
 	k := []byte(key)
 	ct := []byte(cipherText)
@@ -69,4 +60,10 @@ func Decrypt(cipherText, key string) (string, error) {
 	}
 
 	return string(plainByte), nil
+}
+
+func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
+	padding := (blockSize - len(ciphertext)%blockSize)
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(ciphertext, padtext...)
 }
