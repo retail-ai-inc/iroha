@@ -1,7 +1,7 @@
 package main
 
 import (
-	pb "iroha/proto/encrypt"
+	pb "iroha/proto/cryptographic"
 	"iroha/servers"
 	"log"
 	"net"
@@ -16,7 +16,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterEncryptServer(s, &servers.Encrypt{})
+	pb.RegisterCryptographicServer(s, &servers.CryptographicServer{})
 
 	log.Printf("server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {

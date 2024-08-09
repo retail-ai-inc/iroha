@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package cryptographic;
+
+option go_package = "./cryptographic";
+
+service Cryptographic {
+    rpc Encrypt (CryptoRequest) returns (CryptoResponse);
+    rpc Decrypt (CryptoRequest) returns (CryptoResponse);
+}
+
+message CryptoRequest {
+    string type = 1;
+    map<string, string> data = 2;
+
+}
+
+message ErrorDetail {
+    string field = 1;
+    string code = 2;
+}
+
+message CryptoResponse {
+    string erorCode = 1;
+    map<string, string> data = 2;
+    string errorMsg = 3;
+    repeated ErrorDetail errors = 4;
+}
