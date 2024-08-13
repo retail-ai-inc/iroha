@@ -26,3 +26,6 @@ go.work.sum
 
 # Trunk file
 .trunk
+
+# env.json file
+/config/env.json
